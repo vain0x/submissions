@@ -1,0 +1,1 @@
+main = do { a <- readLn; b <- readLn; putStrLn $ show $ ((b * (a `div` b + 1) - a) `mod` b :: Int) }
