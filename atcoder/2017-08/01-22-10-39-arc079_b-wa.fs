@@ -1,0 +1,1 @@
+let k=stdin.ReadLine()|>int64 in let q,l=k/50L,51L-k%50L in[(q+l)..(q+50L)]@[q..(q+l-2L)]|>Seq.map string|>String.concat" "|>printfn"%s"
