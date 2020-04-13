@@ -1,0 +1,121 @@
+//! ----------------------------------------------
+//! Framework <https://github.com/vain0x/procon>
+//!
+//! See the bottom of file for solution.
+//! ----------------------------------------------
+
+#![allow(unused_imports)]
+#![allow(non_snake_case)]
+
+use std::cell::RefCell;
+use std::cmp::{max, min, Ordering};
+use std::collections::*;
+use std::fmt::{Debug, Display, Formatter, Write as FmtWrite};
+use std::io::{stderr, stdin, BufRead, Write};
+use std::mem::{replace, swap};
+use std::ops::*;
+use std::rc::Rc;
+
+/// Print values to standard error if debug mode.
+#[allow(unused_macros)]
+macro_rules! debug {
+    ($($e:expr),*) => {
+        #[cfg(debug_assertions)]
+        $({
+            let (e, mut err) = (stringify!($e), stderr());
+            writeln!(err, "\x1B[33m{}\x1B[0m = {:?}", e, $e).unwrap()
+        })*
+    };
+}
+
+/// Read from standard input and parse each word.
+/// - `read!(T, U, ..)` parses a line as a tuple of words.
+/// - `read![[T]]` parses a line as an array of words.
+/// - `read![..; N]` parses `N` lines, using `read!(..)` repeatedly.
+#[allow(unused_macros)]
+macro_rules! read {
+    ([$t:ty] ; $n:expr) =>
+        ((0..$n).map(|_| read!([$t])).collect::<Vec<_>>());
+    ($($t:ty),+ ; $n:expr) =>
+        ((0..$n).map(|_| read!($($t),+)).collect::<Vec<_>>());
+    ([$t:ty]) =>
+        (rl().split_whitespace().map(|w| w.parse().unwrap()).collect::<Vec<$t>>());
+    ($($t:ty),*) => {{
+        let buf = rl();
+        let mut w = buf.split_whitespace();
+        ($(w.next().unwrap().parse::<$t>().unwrap()),*)
+    }};
+}
+
+/// Read a line from standard input.
+#[allow(dead_code)]
+fn rl() -> String {
+    let mut buf = String::new();
+    stdin().read_line(&mut buf).unwrap();
+
+    #[allow(deprecated)]
+    buf.trim_right().to_owned()
+}
+
+// -----------------------------------------------
+// Solution
+// -----------------------------------------------
+
+fn main() {
+    read!(usize);
+
+    let mut A = read![[i64]];
+    let N = A.len();
+
+    // 負数があるとややこしいので、全体をずらして最小値を 0 にする。
+    let m = *A.iter().min().unwrap();
+    for i in 0..N {
+        A[i] -= m;
+    }
+    let loss = (N / 2) as i64 * m;
+
+    // dp[i][p]:
+    // A[..i] からちょうど i/2 + p 個選ぶときの総和の最大値
+    let mut dp = vec![vec![0; 2]; N + 2];
+
+    for i in 0..N {
+        if i % 2 == 1 {
+            // i/2 + 1 == (i+1)/2
+            dp[i + 1][0] = max(dp[i + 1][0], dp[i][1]);
+        }
+
+        for p in 0..2 {
+            if i % 2 == 0 {
+                // i/2 == (i+1)/2
+                dp[i + 1][p] = max(dp[i + 1][p], dp[i][p]);
+            }
+
+            // A[i] を選ぶケース
+            dp[i + 2][p] = max(dp[i + 2][p], dp[i][p] + A[i]);
+
+            if i == N - 1 {
+                // i/2 + p  == (i+1)/2 + q
+                // q = p - ((i+1)/2 - i/2)
+                if p >= i % 2 {
+                    let q = p - i % 2;
+                    dp[i + 1][q] = max(dp[i + 1][q], dp[i][p] + A[i]);
+                }
+            }
+
+            // A[i] を選ばないケース
+            // i/2 + p == (i+1)/2 + q
+            // q = p - ((i+1)/2 - i/2)
+            if p >= i % 2 {
+                let q = p - i % 2;
+
+                dp[i + 1][q] = max(dp[i + 1][q], dp[i][p]);
+            }
+        }
+    }
+
+    let M = dp[N][0];
+
+    debug!(A, dp, m, loss, M);
+
+    println!("{}", M + loss)
+}
