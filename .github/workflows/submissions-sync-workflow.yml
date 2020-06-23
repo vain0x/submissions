@@ -2,7 +2,7 @@ name: Submissions Sync Workflow
 on:
   schedule:
     # Every Sunday 15:25:00 in UTC (= Monday 04:25:00 in JST)
-    - cron: '25 15 * * 7'
+    - cron: '25 15 * * 0'
   push:
     branches:
       - workflow
