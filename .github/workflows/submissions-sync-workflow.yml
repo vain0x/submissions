@@ -1,8 +1,10 @@
 name: Submissions Sync Workflow
 on:
   schedule:
-    # Every Sunday 15:25:00 in UTC (= Monday 04:25:00 in JST)
-    - cron: '25 15 * * 0'
+    # # Every Sunday 15:25:00 in UTC (= Monday 04:25:00 in JST)
+    # - cron: '25 15 * * 0'
+    # Every Tuesday 12:04:00 in JST
+    - cron: '4 3 * * 2'
   push:
     branches:
       - workflow
@@ -22,8 +24,8 @@ jobs:
           cd $GITHUB_WORKSPACE/submissions
           git config user.name vain0x
           git config user.email vainzerox@gmail.com
-          git fetch origin dev2
-          git switch -c dev2 origin/dev2 || :
+          git fetch origin dev
+          git switch -c dev origin/dev || :
       - name: Download tool
         uses: actions/checkout@v2
         with:
@@ -41,8 +43,8 @@ jobs:
           {
               "user_id": "vain0",
               "work_dir": "$GITHUB_WORKSPACE/submissions",
-              "limit": 3,
-              "delay_ms": 2000,
+              "limit": 30,
+              "delay_ms": 3000,
               "git_envs": {
                   "GIT_AUTHOR_NAME": "vain0x",
                   "GIT_AUTHOR_EMAIL": "vainzerox@gmail.com",
@@ -57,4 +59,4 @@ jobs:
       - name: Push
         run: |
           cd $GITHUB_WORKSPACE/submissions
-          git push origin dev2 || :
+          git push origin dev || :
