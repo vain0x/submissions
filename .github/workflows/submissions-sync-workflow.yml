@@ -1,10 +1,5 @@
 name: Submissions Sync Workflow
 on:
-  schedule:
-    # # Every Sunday 15:25:00 in UTC (= Monday 04:25:00 in JST)
-    # - cron: '25 15 * * 0'
-    # Every Tuesday 12:04:00 in JST
-    - cron: '4 3 * * 2'
   push:
     branches:
       - workflow
@@ -36,15 +31,17 @@ jobs:
         uses: actions/setup-node@v2-beta
         with:
           node-version: '12'
-      - name: Set up and run tool
+      - name: Set up tool
         run: |
           cd $GITHUB_WORKSPACE/submissions-sync
+          npm ci
+          npm run test
           cat >env.json <<END
           {
               "user_id": "vain0",
               "work_dir": "$GITHUB_WORKSPACE/submissions",
               "limit": 30,
-              "delay_ms": 3000,
+              "delay_ms": 1000,
               "git_envs": {
                   "GIT_AUTHOR_NAME": "vain0x",
                   "GIT_AUTHOR_EMAIL": "vainzerox@gmail.com",
@@ -53,8 +50,9 @@ jobs:
               }
           }
           END
-          npm ci
-          npm run test
+      - name: Run tool
+        run: |
+          cd $GITHUB_WORKSPACE/submissions-sync
           npm run start
       - name: Push
         run: |
