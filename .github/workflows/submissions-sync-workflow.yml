@@ -1,0 +1,63 @@
+name: Submissions Sync Workflow
+on:
+  schedule:
+    # Everyday at 12:36:00 in JST
+    - cron: '36 3 * * *'
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Run Submissions Sync
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out files
+        uses: actions/checkout@v2
+        with:
+          path: submissions
+          fetch-depth: 0
+      - name: Configure Git
+        run: |
+          cd $GITHUB_WORKSPACE/submissions
+          git config user.name vain0x
+          git config user.email vainzerox@gmail.com
+          git fetch origin dev
+          git switch -c dev origin/dev || :
+      - name: Download tool
+        uses: actions/checkout@v2
+        with:
+          repository: vain0x/submissions-sync
+          ref: develop
+          path: submissions-sync
+      - name: Set up Node.js
+        uses: actions/setup-node@v2-beta
+        with:
+          node-version: '12'
+      - name: Set up tool
+        run: |
+          cd $GITHUB_WORKSPACE/submissions-sync
+          npm ci
+          npm run test
+          cat >env.json <<END
+          {
+              "user_id": "vain0",
+              "work_dir": "$GITHUB_WORKSPACE/submissions",
+              "limit": 30,
+              "delay_ms": 1000,
+              "git_envs": {
+                  "GIT_AUTHOR_NAME": "vain0x",
+                  "GIT_AUTHOR_EMAIL": "vainzerox@gmail.com",
+                  "GIT_COMMITTER_NAME": "submissions-sync",
+                  "GIT_COMMITTER_EMAIL": "vainzerox@gmail.com"
+              }
+          }
+          END
+      - name: Run tool
+        run: |
+          cd $GITHUB_WORKSPACE/submissions-sync
+          npm run start
+      - name: Push
+        run: |
+          cd $GITHUB_WORKSPACE/submissions
+          git push origin dev || :
