@@ -37,7 +37,7 @@ jobs:
       - name: Set up and run tool
         run: |
           cd $GITHUB_WORKSPACE/submissions-sync
-          cat >env.json <END
+          cat >env.json <<END
           {
               "user_id": "vain0",
               "work_dir": "$GITHUB_WORKSPACE/submissions",
